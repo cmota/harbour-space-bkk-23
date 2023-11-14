@@ -1,2 +1,3 @@
-# harbour-space-bkk-23
-Mobile Development Course @ Harbour Space University
+# CS305 - Mobile Development @ Harbour Space 
+
+These materials are part of the Mobile Development course, for Harbour Space University.
