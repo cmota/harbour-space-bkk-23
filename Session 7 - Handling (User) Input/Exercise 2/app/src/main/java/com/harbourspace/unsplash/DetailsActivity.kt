@@ -192,13 +192,11 @@ fun AddImageInformation(
   Text(
     text = title,
     fontSize = 17.sp,
-    fontWeight = FontWeight.Bold,
-    color = Color.White
+    fontWeight = FontWeight.Bold
   )
 
   Text(
     text = subtitle,
-    fontSize = 15.sp,
-    color = Color.White
+    fontSize = 15.sp
   )
 }
