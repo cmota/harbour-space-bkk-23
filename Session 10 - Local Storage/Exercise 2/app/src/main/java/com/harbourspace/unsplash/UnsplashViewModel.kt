@@ -1,0 +1,74 @@
+package com.harbourspace.unsplash
+
+import android.app.Application
+import android.content.Context
+import android.util.Log
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import com.harbourspace.unsplash.api.UnsplashApiProvider
+import com.harbourspace.unsplash.data.cb.UnsplashResult
+import com.harbourspace.unsplash.data.model.UnsplashCollection
+import com.harbourspace.unsplash.data.model.UnsplashItem
+import com.harbourspace.unsplash.repository.AppDatabase
+import com.harbourspace.unsplash.repository.UnsplashRepository
+
+private const val TAG = "UnsplashViewModel"
+class UnsplashViewModel(application: Application) : AndroidViewModel(application), UnsplashResult {
+
+  val database by lazy { AppDatabase.getDatabase(application) }
+
+  val repository by lazy { UnsplashRepository(database.unsplashDao()) }
+
+  private val _items = MutableLiveData<List<UnsplashItem>>()
+  val items: MediatorLiveData<List<UnsplashItem>> = MediatorLiveData<List<UnsplashItem>>().apply {
+    addSource(_items) { this.value = _items.value }
+    addSource(repository.items) { this.value = repository.items.value }
+  }
+
+  private val _collections = MutableLiveData<List<UnsplashCollection>>()
+  val collections: LiveData<List<UnsplashCollection>> = _collections
+
+  private val _loading = MutableLiveData(false)
+  val loading: LiveData<Boolean> = _loading
+
+  private val provider by lazy {
+    UnsplashApiProvider()
+  }
+
+  fun searchImages(keyword: String) {
+    provider.searchImages(keyword, this)
+  }
+
+  fun fetchImages() {
+    _loading.value = true
+    provider.fetchImages(this)
+  }
+
+  fun fetchCollections() {
+    provider.fetchCollections(this)
+  }
+
+  override fun onDataFetchedSuccess(images: List<UnsplashItem>) {
+    Log.d(TAG, "onDataFetchedSuccess | Received ${images.size} images")
+
+    for (image in images) {
+      repository.insert(image)
+    }
+
+    _items.value = images
+    _loading.value = false
+  }
+
+  override fun onCollectionsFetchedSuccess(collections: List<UnsplashCollection>) {
+    Log.d(TAG, "onCollectionsFetchedSuccess | Received ${collections.size} collections")
+    _collections.value = collections
+  }
+
+  override fun onDataFetchedFailed() {
+    Log.e(TAG, "onDataFetchedFailed | Unable to retrieve images")
+    _loading.value = false
+  }
+}
