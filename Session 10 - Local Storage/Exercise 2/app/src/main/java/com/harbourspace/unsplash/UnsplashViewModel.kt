@@ -1,31 +1,36 @@
 package com.harbourspace.unsplash
 
-import android.app.Application
-import android.content.Context
 import android.util.Log
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.harbourspace.unsplash.api.UnsplashApiProvider
 import com.harbourspace.unsplash.data.cb.UnsplashResult
 import com.harbourspace.unsplash.data.model.UnsplashCollection
 import com.harbourspace.unsplash.data.model.UnsplashItem
-import com.harbourspace.unsplash.repository.AppDatabase
 import com.harbourspace.unsplash.repository.UnsplashRepository
 
 private const val TAG = "UnsplashViewModel"
-class UnsplashViewModel(application: Application) : AndroidViewModel(application), UnsplashResult {
+class UnsplashViewModel(
+  private val repository: UnsplashRepository
+) : ViewModel(), ViewModelProvider.Factory, UnsplashResult {
 
-  val database by lazy { AppDatabase.getDatabase(application) }
+  override fun <T : ViewModel> create(modelClass: Class<T>): T {
+    if (modelClass.isAssignableFrom(UnsplashViewModel::class.java)) {
+      @Suppress("UNCHECKED_CAST")
+      return UnsplashViewModel(repository) as T
+    }
 
-  val repository by lazy { UnsplashRepository(database.unsplashDao()) }
+    throw IllegalArgumentException("Unknown ViewModel class")
+
+  }
 
   private val _items = MutableLiveData<List<UnsplashItem>>()
   val items: MediatorLiveData<List<UnsplashItem>> = MediatorLiveData<List<UnsplashItem>>().apply {
     addSource(_items) { this.value = _items.value }
-    addSource(repository.items) { this.value = repository.items.value }
+    addSource(repository.items) { this.value =repository.items.value }
   }
 
   private val _collections = MutableLiveData<List<UnsplashCollection>>()

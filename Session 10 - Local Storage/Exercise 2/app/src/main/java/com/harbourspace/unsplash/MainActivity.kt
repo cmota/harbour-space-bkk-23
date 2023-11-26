@@ -36,7 +36,9 @@ enum class Tab(@StringRes val tab: Int) {
 
 class MainActivity : ComponentActivity() {
 
-  private val unsplashViewModel: UnsplashViewModel by viewModels()
+  private val unsplashViewModel: UnsplashViewModel by viewModels {
+    UnsplashViewModel((application as AppApplication).repository)
+  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
